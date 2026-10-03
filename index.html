@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Print Shop Toolkit</title>
+<style>
+:root{--bg:#f6f5f2;--card:#fff;--ink:#1b1b1b;--mute:#6b6b66;--line:#e2e0da;--acc:#0f766e;--accbg:#d9f0ed;--piece:#0f766e;--rot:#d97706;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121413;--card:#1c1f1e;--ink:#f0efea;--mute:#9a9a92;--line:#2c302e;--acc:#2dd4bf;--accbg:#12332f;--piece:#2dd4bf;--rot:#fbbf24}}
+:root[data-theme="dark"]{--bg:#121413;--card:#1c1f1e;--ink:#f0efea;--mute:#9a9a92;--line:#2c302e;--acc:#2dd4bf;--accbg:#12332f;--piece:#2dd4bf;--rot:#fbbf24}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:18px 14px 40px}
+h1{font-size:22px;margin:0}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.top .g{display:flex;gap:8px}.top .g>div{width:90px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:8px 14px;font:inherit;cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:0 0 10px}
+label{display:block;font-size:12px;color:var(--mute);margin-bottom:3px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus,select:focus{outline:2px solid var(--acc);outline-offset:-1px}
+.row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:10px}
+.r3{grid-template-columns:repeat(3,1fr)}
+.srow{display:grid;grid-template-columns:1.3fr .8fr .8fr .8fr auto;gap:6px;margin-bottom:6px;align-items:center}
+.sh{font-size:11px;color:var(--mute);margin-bottom:4px}
+.x{background:none;border:0;color:var(--mute);font-size:18px;cursor:pointer;padding:4px 8px}
+.btn{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:8px 12px;font:inherit;cursor:pointer}
+.btn:hover{border-color:var(--acc)}
+.wide{grid-column:1/-1}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+#res tr{cursor:pointer}
+#res tr.sel{background:var(--accbg)}
+.big{font-weight:700;font-size:17px}
+.best{display:inline-block;background:var(--acc);color:var(--bg);font-size:10px;padding:1px 6px;border-radius:99px;margin-left:6px;vertical-align:middle}
+.leg{display:flex;gap:14px;font-size:12px;color:var(--mute);margin:8px 0 0;flex-wrap:wrap}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+svg{width:100%;height:auto;max-height:420px;display:block}
+.note{color:var(--mute);font-size:12px;margin-top:8px}
+.tot td{font-weight:700;font-size:16px;border-bottom:0}
+.hid{display:none}
+.ph{display:none}
+.b{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;background:var(--accbg);color:var(--acc)}
+.warn{background:rgba(217,119,6,.18);color:var(--rot)}.bad{background:rgba(220,38,38,.16);color:#dc2626}
+.pri{background:var(--acc);color:var(--bg);border-color:var(--acc);font-weight:600}
+.r4{grid-template-columns:repeat(4,1fr)}@media(max-width:600px){.r4{grid-template-columns:1fr 1fr}}
+.stat{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.stat div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+.stat b{display:block;font-size:22px}.stat span,.mute{color:var(--mute);font-size:12px}
+.board{display:flex;gap:10px;overflow-x:auto;align-items:flex-start}.col{min-width:215px;flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+.job{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px;margin-top:8px;font-size:13px}.acts{margin-top:4px;display:flex;justify-content:space-between}
+.qc{display:flex;gap:4px;align-items:center}.qc input{width:84px;text-align:center}.qc .btn{padding:6px 11px}
+a.x{text-decoration:none}
+@media print{.noprint,.tabs,.top .g{display:none!important}body{background:#fff}.card{border-color:#ccc;break-inside:avoid}.ph{display:block;margin-bottom:8px}}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+<div id="lov" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:50;align-items:center;justify-content:center;padding:20px"><div class="card" style="width:100%;max-width:360px"><h2>Sign in to Print Shop Toolkit</h2>
+<div style="margin-bottom:10px"><label>Email</label><input id="le" type="email" autocomplete="username"></div>
+<div style="margin-bottom:10px"><label>Password</label><input id="lpw" type="password" autocomplete="current-password"></div>
+<button class="btn pri" id="lbtn" style="width:100%">Sign in</button><div class="note" id="lerr" style="color:#dc2626"></div></div></div>
+<div class="wrap">
+  <div class="top">
+    <div><h1>Print Shop Toolkit</h1><div class="note" style="margin:2px 0 0">Qty on stock · costing · large format · quotes · jobs · stock</div> <span class="b" id="dbs" style="margin-top:6px">Checking…</span> <button class="btn noprint" id="sgo" style="display:none;padding:2px 10px;font-size:12px">Sign out</button></div>
+    <div class="g noprint"><div><label>Unit</label><select id="unit"><option value="1">mm</option><option value="10" selected>cm</option><option value="25.4">inch</option></select></div><div><label>Currency</label><input id="cur" value="AED"></div></div>
+  </div>
+  <div class="tabs noprint"><button class="tab on" data-t="t1">Qty &amp; Cost</button><button class="tab" data-t="t2">Large format</button><button class="tab" data-t="t3">Quote</button><button class="tab" data-t="t4">Jobs</button><button class="tab" data-t="t5">Stock</button><button class="tab" data-t="t6">History</button></div>
+
+  <div id="t1" class="grid">
+    <div class="card noprint">
+      <h2>Design &amp; settings</h2>
+      <div class="row"><div><label>Design width</label><input id="dw" type="number" step="any" min="0" value="9"></div><div><label>Design height</label><input id="dh" type="number" step="any" min="0" value="5.5"></div></div>
+      <div class="row r3"><div><label>Gap between</label><input id="gap" type="number" step="any" min="0" value="0.2"></div><div><label>Sheet margin</label><input id="mar" type="number" step="any" min="0" value="0.5"></div><div><label>Bleed (each side)</label><input id="bl" type="number" step="any" min="0" value="0.3"></div></div>
+      <div class="row r3"><div><label>Qty needed</label><input id="need" type="number" min="0" placeholder="e.g. 1000"></div><div><label>Wastage %</label><input id="waste" type="number" step="any" min="0" value="5"></div><div><label>Rotation</label><select id="rot"><option value="1">Best fit</option><option value="0">Fixed</option></select></div></div>
+      <div class="row"><div><label>Crop marks in preview</label><select id="crop"><option value="1">Show</option><option value="0">Hide</option></select></div></div>
+    </div>
+    <div class="card noprint">
+      <h2>Ready-made stock sizes</h2>
+      <div class="srow sh"><span>Name</span><span>Width</span><span>Height</span><span>Price/sheet</span><span></span></div>
+      <div id="stocks"></div>
+      <button class="btn" id="add">+ Add stock size</button>
+    </div>
+    <div class="card wide">
+      <div class="ph" id="psum"></div>
+      <h2>Results</h2>
+      <div class="tw"><table><thead id="rh"></thead><tbody id="res"></tbody></table></div>
+      <div class="note">Tap a row to preview. Used % = design area ÷ sheet area. Sheets needed includes wastage. Set a price per sheet to compare costs.</div>
+    </div>
+    <div class="card wide">
+      <div style="display:flex;justify-content:space-between;align-items:center"><h2 id="ptitle" style="margin:0">Layout preview</h2><button class="btn noprint" id="prt">Print / save PDF</button></div>
+      <div id="prev"></div>
+      <div class="leg"><span><i style="background:var(--piece)"></i>Normal</span><span><i style="background:var(--rot)"></i>Rotated 90°</span><span><i style="border:1px dashed var(--mute)"></i>Margin</span></div>
+    </div>
+  </div>
+
+  <div id="t2" class="grid hid">
+    <div class="card">
+      <h2>Material &amp; job</h2>
+      <div class="row"><div style="grid-column:1/-1"><label>Material</label><select id="lm"></select></div></div>
+      <div class="row" id="lsz"><div><label>Item width</label><input id="lw" type="number" step="any" min="0" value="200"></div><div><label>Item height</label><input id="lh" type="number" step="any" min="0" value="80"></div></div>
+      <div class="row r3" id="lst"><div><label id="lrwl">Roll width</label><input id="lrw" type="number" step="any" min="0" value="320"></div><div id="lshw"><label>Sheet height</label><input id="lsh" type="number" step="any" min="0" value="244"></div><div><label>Gap</label><input id="lg" type="number" step="any" min="0" value="2"></div></div>
+      <div class="row"><div><label>Qty</label><input id="lq" type="number" min="1" value="3"></div><div><label id="lpl">Price per m²</label><input id="lp" type="number" step="any" min="0" placeholder="0.00"></div></div>
+      <div class="note">Default roll and sheet sizes are typical market sizes. Change them if your stock is different. Prices are remembered per material on this device.</div>
+    </div>
+    <div class="card"><h2>Result</h2><div id="lout"></div></div>
+  </div>
+
+  <div id="t3" class="grid hid">
+    <div class="card noprint">
+      <h2>Quote builder</h2>
+      <div class="row"><div><label>Quote for</label><select id="qsrc"><option value="s">Qty &amp; Cost job</option><option value="l">Large format job</option></select></div><div><label>Customer</label><input id="qc"></div></div>
+      <div class="row"><div><label>Job</label><input id="qj"></div><div><label>Setup / design fee</label><input id="qset" type="number" step="any" min="0" value="0"></div></div>
+      <h2 style="margin-top:6px">Production</h2>
+      <div class="row r3"><div><label>Printing / sheet</label><input id="qpr" type="number" step="any" min="0" value="0"></div><div><label>Printing / m²</label><input id="qprm" type="number" step="any" min="0" value="0"></div><div><label>Finishing / piece</label><input id="qfin" type="number" step="any" min="0" value="0"></div></div>
+      <h2>Fabrication &amp; die-cutting</h2>
+      <div class="row r3"><div><label>Fabrication / piece</label><input id="qfab" type="number" step="any" min="0" value="0"></div><div><label>Die tooling (flat)</label><input id="qdt" type="number" step="any" min="0" value="0"></div><div><label>Die-cut / piece</label><input id="qdp" type="number" step="any" min="0" value="0"></div></div>
+      <h2>Delivery &amp; installation</h2>
+      <div class="row r3"><div><label>Delivery (flat)</label><input id="qdel" type="number" step="any" min="0" value="0"></div><div><label>Installation (flat)</label><input id="qin" type="number" step="any" min="0" value="0"></div><div><label>Install / piece</label><input id="qinp" type="number" step="any" min="0" value="0"></div></div>
+      <h2>Pricing</h2>
+      <div class="row r3"><div><label>Markup %</label><input id="qmk" type="number" step="any" min="0" value="30"></div><div><label>VAT %</label><input id="qvat" type="number" step="any" min="0" value="5"></div><div><label>Markup on delivery &amp; install</label><select id="qmu"><option value="1">Yes</option><option value="0">No (at cost)</option></select></div></div>
+      <div class="note">Qty &amp; Cost jobs use the stock row selected on the first tab. Large format jobs use the material job on the second tab. Printing / sheet applies to the first, printing / m² to the second.</div>
+    </div>
+    <div class="card"><h2>Quote</h2><div id="qout"></div>
+      <div class="noprint" style="margin-top:10px;display:flex;gap:8px"><button class="btn pri" id="qsave">Save quote</button><button class="btn" id="qcopy">Copy text</button><button class="btn" id="qprt">Print / save PDF</button></div></div>
+  </div>
+
+  <div id="t4" class="hid">
+    <div class="stat" id="jstat"></div>
+    <div class="card noprint"><h2 id="jft">Add job</h2>
+      <div class="row r3"><div><label>Customer</label><input id="jc"></div><div><label>Phone (WhatsApp)</label><input id="jph" placeholder="9715xxxxxxxx"></div><div><label>Job</label><input id="jt" placeholder="e.g. 1000 business cards"></div></div>
+      <div class="row r3"><div><label>Qty</label><input id="jq" type="number" min="0"></div><div><label>Due date</label><input id="jd" type="date"></div><div><label>Stage</label><select id="js"></select></div></div>
+      <div class="row"><div><label>Value</label><input id="jv" type="number" step="any" min="0"></div><div><label>Notes</label><input id="jn"></div></div>
+      <button class="btn pri" id="jsv">Add job</button> <button class="btn" id="jcn" style="display:none">Cancel edit</button></div>
+    <input id="jq2" placeholder="Search customer, job or notes" style="margin-bottom:12px">
+    <div class="board" id="board"></div>
+  </div>
+
+  <div id="t5" class="hid">
+    <div class="stat" id="sstat"></div>
+    <div class="card noprint"><h2>Add stock item</h2>
+      <div class="row r4"><div><label>Name</label><input id="sn" placeholder="e.g. 50×35 cm Art 300gsm"></div><div><label>Sheets in stock</label><input id="sq" type="number" min="0" value="0"></div><div><label>Reorder at</label><input id="sm" type="number" min="0" value="0"></div><div style="align-self:end"><button class="btn pri" id="sadd" style="width:100%">Add</button></div></div>
+      <button class="btn" id="simp">Import my stock sizes</button> <button class="btn" id="scp">Copy reorder list</button></div>
+    <div class="card"><div class="row"><div><label>Search</label><input id="sq2"></div><div><label>Step for + / −</label><select id="sst"><option>1</option><option>10</option><option selected>100</option><option>500</option></select></div></div>
+      <div class="tw"><table><thead><tr><th>Item</th><th>In stock (sheets)</th><th>Reorder at</th><th>Status</th><th></th></tr></thead><tbody id="srows"></tbody></table></div>
+      <div class="note">LOW appears when stock is at or below the reorder level, OUT at zero. Set a reorder level to switch warnings on.</div></div>
+  </div>
+
+  <div id="t6" class="hid">
+    <div class="card"><div class="row"><div><label>Search customer or job</label><input id="hq"></div><div style="align-self:end"><span class="mute" id="hsum"></span></div></div>
+      <div class="tw"><table><thead><tr><th>Date</th><th>Customer</th><th>Job</th><th>Qty</th><th>Total</th><th></th></tr></thead><tbody id="hrows"></tbody></table></div>
+      <div class="note">⧉ copy quote text · ➜ Job creates a job from the quote · ↻ reuses its rates on the Quote tab.</div></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id),V=id=>parseFloat($(id).value)||0;
+const DEF="21x15 25x23 45x25 45x32 48x23 23x20 20x14 35x25 35x33 33x23 48x33 50x35 50x23 100x70 90x64 70x50".split(" ").map(z=>{const[a,b]=z.split("x");return{n:a+"×"+b+" cm",w:a*10,h:b*10,p:0}});
+let stocks=null,sel=0,lastUnit=10,R=[];
+try{stocks=JSON.parse(localStorage.getItem("pqc_v3")||localStorage.getItem("pqc_stocks_v2")||"null")}catch(e){}
+if(!Array.isArray(stocks)||!stocks.length)stocks=DEF;
+stocks.forEach(s=>s.p=+s.p||0);
+const save=()=>{try{localStorage.setItem("pqc_v3",JSON.stringify(stocks))}catch(e){}pushSettings()};
+const u=()=>parseFloat($("unit").value),f=v=>+(v/u()).toFixed(3),t=v=>(parseFloat(v)||0)*u();
+const M=v=>($("cur").value||"")+" "+v.toFixed(2),esc=s=>String(s).replace(/"/g,"&quot;");
+
+function place(x0,y0,W,H,w,h,g,r){const o=[];if(w<=0||h<=0||W<w||H<h)return o;
+  const nx=Math.floor((W+g)/(w+g)),ny=Math.floor((H+g)/(h+g));
+  for(let j=0;j<ny;j++)for(let i=0;i<nx;i++)o.push({x:x0+i*(w+g),y:y0+j*(h+g),w,h,r});return o}
+const ext=a=>a.length?{w:Math.max(...a.map(p=>p.x+p.w)),h:Math.max(...a.map(p=>p.y+p.h))}:{w:0,h:0};
+function best(W,H,w,h,g,ar){let top=[];
+  for(const [a,b,r] of ar?[[w,h,false],[h,w,true]]:[[w,h,false]]){
+    const m=place(0,0,W,H,a,b,g,r);if(!m.length)continue;const e=ext(m),c=[m];
+    if(ar){const q=!r;
+      c.push(m.concat(place(e.w+g,0,W-e.w-g,H,b,a,g,q),place(0,e.h+g,e.w,H-e.h-g,b,a,g,q)));
+      c.push(m.concat(place(e.w+g,0,W-e.w-g,e.h,b,a,g,q),place(0,e.h+g,W,H-e.h-g,b,a,g,q)))}
+    for(const x of c)if(x.length>top.length)top=x}
+  return top}
+
+function renderStocks(){$("stocks").innerHTML=stocks.map((s,i)=>`<div class="srow">
+  <input data-i="${i}" data-k="n" value="${esc(s.n)}">
+  <input data-i="${i}" data-k="w" type="number" step="any" value="${f(s.w)}">
+  <input data-i="${i}" data-k="h" type="number" step="any" value="${f(s.h)}">
+  <input data-i="${i}" data-k="p" type="number" step="any" min="0" value="${s.p||""}" placeholder="0.00">
+  <button class="x" data-del="${i}" title="Remove">×</button></div>`).join("")}
+
+function calc(){
+  const bl=t($("bl").value),w=t($("dw").value)+2*bl,h=t($("dh").value)+2*bl,g=t($("gap").value),m=t($("mar").value);
+  const ar=$("rot").value==="1",need=parseInt($("need").value)||0,wa=V("waste");
+  R=stocks.map((s,i)=>{const W=s.w-2*m,H=s.h-2*m;
+    const L=(W>0&&H>0&&w>0&&h>0)?best(W,H,w,h,g,ar):[],n=L.length;
+    const sheets=need&&n?Math.ceil(need*(1+wa/100)/n):null,cost=sheets&&s.p>0?sheets*s.p:null;
+    return{i,s,L,n,used:s.w*s.h?n*w*h/(s.w*s.h)*100:0,sheets,cost}});
+  const priced=need&&R.some(r=>r.cost),mx=Math.max(0,...R.map(r=>r.n));
+  const cheap=priced?Math.min(...R.filter(r=>r.cost).map(r=>r.cost)):0;
+  if(sel>=R.length)sel=0;
+  const un=$("unit").selectedOptions[0].text;
+  $("rh").innerHTML=`<tr><th>Stock</th><th>Size</th><th>Pcs / sheet</th><th>Used</th>${need?"<th>Sheets (+waste)</th>":""}${priced?"<th>Total</th><th>Per piece</th>":""}</tr>`;
+  $("res").innerHTML=R.map(r=>{const tag=priced?(r.cost&&r.cost===cheap?"CHEAPEST":""):(r.n&&r.n===mx?"MOST PCS":"");
+    return`<tr data-s="${r.i}" class="${r.i===sel?"sel":""}"><td>${esc(r.s.n||"Stock "+(r.i+1))}${tag?`<span class="best">${tag}</span>`:""}</td>
+    <td>${f(r.s.w)} × ${f(r.s.h)} ${un}</td><td class="big">${r.n}</td><td>${r.used.toFixed(1)}%</td>
+    ${need?`<td>${r.sheets??"—"}</td>`:""}${priced?`<td>${r.cost?M(r.cost):"—"}</td><td>${r.cost?M(r.cost/need):"—"}</td>`:""}</tr>`}).join("");
+  $("psum").textContent=`Design ${$("dw").value} × ${$("dh").value} ${un}, bleed ${$("bl").value}, gap ${$("gap").value}, margin ${$("mar").value}${need?`, qty ${need}`:""}`;
+  draw(R[sel],m,bl)}
+
+function draw(r,m,bl){if(!r){$("prev").innerHTML="";return}
+  const S=r.s,fs=Math.max(S.w,S.h)/28,crop=$("crop").value==="1"&&bl>0;
+  $("ptitle").textContent=`Preview — ${S.n||"Stock"}: ${r.n} pcs`;
+  let o="";
+  for(const p of r.L){const x=p.x+m,y=p.y+m;
+    o+=`<rect x="${x}" y="${y}" width="${p.w}" height="${p.h}" fill="${p.r?"var(--rot)":"var(--piece)"}" fill-opacity=".75"/>`;
+    if(bl>0)o+=`<rect x="${x+bl}" y="${y+bl}" width="${p.w-2*bl}" height="${p.h-2*bl}" fill="none" stroke="var(--card)" stroke-width="${fs/16}"/>`;
+    if(crop){const a=x+bl,b=y+bl,c=x+p.w-bl,d=y+p.h-bl,k=bl*.9,sw=fs/20;
+      o+=`<path stroke="var(--ink)" stroke-width="${sw}" d="M${a-k} ${b}H${a-.1}M${a} ${b-k}V${b-.1}M${c+k} ${b}H${c+.1}M${c} ${b-k}V${b-.1}M${a-k} ${d}H${a-.1}M${a} ${d+k}V${d+.1}M${c+k} ${d}H${c+.1}M${c} ${d+k}V${d+.1}"/>`}}
+  $("prev").innerHTML=`<svg viewBox="-${fs} -${fs} ${S.w+2*fs} ${S.h+2*fs}" role="img" aria-label="Layout preview"><rect x="0" y="0" width="${S.w}" height="${S.h}" fill="var(--bg)" stroke="var(--mute)" stroke-width="${fs/14}"/><rect x="${m}" y="${m}" width="${Math.max(0,S.w-2*m)}" height="${Math.max(0,S.h-2*m)}" fill="none" stroke="var(--mute)" stroke-dasharray="${fs/3} ${fs/3}" stroke-width="${fs/20}"/>${o}</svg>`}
+
+const MAT=[
+["Rigid Board Materials",[["Forex (PVC Foam Board)","s",1220,2440],["PVC Sheet (Solid / Rigid PVC)","s",1220,2440],["Acrylic (Plexiglass)","s",1220,2440],["Corrugated (Coroplast / Flute Board)","s",1220,2440],["ATP (Aluminum Composite Panel / DiBond)","s",1220,2440]]],
+["Flexible Media & Banners",[["Banner (Scrim Banner)","r",3200],["Flex Sign (Backlit / Frontlit Flex)","r",3200],["Fabric (Textile Printing Media)","r",1600],["Canvas (Artistic / Canvas Rolls)","r",1060],["Poster Media (Large Format Paper)","r",1070]]],
+["Self-Adhesive Vinyls & Stickers",[["Vinyle (Standard Plotter & Print Vinyl)","r",1370],["Clear sticker (Transparent Vinyl)","r",1370],["Oneway Vision (Perforated Window Film)","r",1370],["Reflective sticker (High-Visibility Vinyl)","r",1240]]],
+["Displays & Specialty Products",[["Rollups (Pull-Up Banner Stands)","u"],["Popups (Trade Show Display Backdrops)","u"],["Desk (Promotional Counters / Reception Desks)","u"],["Magnetic Sheets (Printable Magnet Media)","r",620]]]];
+const MA=[];MAT.forEach(([g,L])=>L.forEach(([n,m,w,h])=>MA.push({n,g,m,w,h})));
+let MP={},lfR=null;try{MP=JSON.parse(localStorage.getItem("pqc_mp")||"{}")}catch(e){}
+$("lm").innerHTML=MAT.map(([g,L])=>`<optgroup label="${g.replace("&","&amp;")}">${L.map(x=>`<option value="${MA.findIndex(a=>a.n===x[0])}">${x[0]}</option>`).join("")}</optgroup>`).join("");
+const tb=r=>`<table>${r.map(x=>`<tr${x[2]?' class="tot"':""}><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("")}</table>`;
+function pickMat(){const a=MA[$("lm").value];
+  $("lsz").style.display=$("lst").style.display=a.m==="u"?"none":"";
+  $("lshw").style.display=a.m==="s"?"":"none";
+  $("lrwl").textContent=a.m==="s"?"Sheet width":"Roll width";
+  $("lpl").textContent=a.m==="u"?"Price per unit":"Price per m²";
+  if(a.m!=="u")$("lrw").value=f(a.w);if(a.m==="s")$("lsh").value=f(a.h);
+  $("lp").value=MP[a.n]||"";lf()}
+function lf(){
+  const a=MA[$("lm").value]||MA[0],q=parseInt($("lq").value)||0,p=V("lp"),un=$("unit").selectedOptions[0].text;lfR=null;
+  if(!q){$("lout").innerHTML='<div class="note">Enter a quantity.</div>';return}
+  if(a.m==="u"){lfR={q,A:0,cost:p?p*q:null,d:`${a.n}, ${q} unit${q>1?"s":""}`,lay:"Ready-made display product"};
+    $("lout").innerHTML=tb([["Product",a.n],["Quantity",q],...(p?[["Cost",M(p*q),1],["Per unit",M(p)]]:[])]);return}
+  const W=t($("lw").value),H=t($("lh").value),RW=t($("lrw").value),g=t($("lg").value);
+  if(W<=0||H<=0||RW<=0){$("lout").innerHTML='<div class="note">Enter item and stock sizes.</div>';return}
+  let ru,lay,rows;const A=W*H*q/1e6;
+  if(a.m==="r"){let b=null;
+    for(const [w,h,rot] of [[W,H,false],[H,W,true]]){if(w>RW)continue;const per=Math.floor((RW+g)/(w+g)),rw=Math.ceil(q/per),len=rw*(h+g)-g;if(!b||len<b.len)b={per,rw,len,rot}}
+    if(!b){$("lout").innerHTML='<div class="note">Item is wider than the roll in both directions.</div>';return}
+    ru=b.len*RW/1e6;lay=`${b.per} across × ${b.rw} row${b.rw>1?"s":""}${b.rot?" (rotated)":""}`;
+    rows=[["Layout",lay],["Roll length used",(b.len/1000).toFixed(2)+" m"]]}
+  else{const SH=t($("lsh").value),n=best(RW,SH,W,H,g,true).length;
+    if(!n){$("lout").innerHTML='<div class="note">Item does not fit on the sheet.</div>';return}
+    const sh=Math.ceil(q/n);ru=sh*RW*SH/1e6;lay=`${n} per sheet × ${sh} sheet${sh>1?"s":""}`;rows=[["Layout",lay],["Sheets needed",sh]]}
+  rows.push(["Print area",A.toFixed(2)+" m²"],["Material used",ru.toFixed(2)+" m² ("+((1-A/ru)*100).toFixed(1)+"% waste)"]);
+  if(p)rows.push(["Material cost",M(ru*p),1],["Per item",M(ru*p/q)]);
+  lfR={q,A,cost:p?ru*p:null,d:`${a.n}, ${$("lw").value} × ${$("lh").value} ${un} × ${q} pcs`,lay};
+  $("lout").innerHTML=tb(rows)+'<div class="note">Material is charged on the area used, including waste.</div>'}
+
+let qtext="";
+function quote(){
+  const src=$("qsrc").value,un=$("unit").selectedOptions[0].text;let qty,mat,pr,desc,spec;
+  if(src==="s"){const r=R[sel],need=parseInt($("need").value)||0;
+    if(!r||!need||!r.n){$("qout").innerHTML='<div class="note">Enter a design size and Qty needed on the Qty &amp; Cost tab first, and select a stock row.</div>';qtext="";return}
+    qty=need;mat=r.cost||0;pr=r.sheets*V("qpr");desc=`${$("dw").value} × ${$("dh").value} ${un} × ${need} pcs`;spec=`${r.s.n} · ${r.n}/sheet · ${r.sheets} sheets`}
+  else{if(!lfR){$("qout").innerHTML='<div class="note">Fill in a material job on the Large format tab first.</div>';qtext="";return}
+    qty=lfR.q;mat=lfR.cost||0;pr=lfR.A*V("qprm");desc=lfR.d;spec=lfR.lay}
+  const fin=qty*V("qfin"),fab=qty*V("qfab"),die=V("qdt")+qty*V("qdp"),set=V("qset"),del=V("qdel"),ins=V("qin")+qty*V("qinp");
+  const prod=mat+pr+fin+fab+die+set,extra=del+ins,mk=(prod+($("qmu").value==="1"?extra:0))*V("qmk")/100,ex=prod+extra+mk,vat=ex*V("qvat")/100,tot=ex+vat;
+  const L=[["Material",mat,1],["Printing",pr,1],["Finishing",fin],["Fabrication",fab],["Die-cutting",die],["Setup / design",set],["Markup "+V("qmk")+"%",mk],["Delivery",del],["Installation",ins]].filter(x=>x[2]||x[1]>0);
+  const job=$("qj").value||"Print job",cu=$("qc").value;
+  $("qout").innerHTML=`<div class="note" style="margin:0 0 8px">${esc(job)}${cu?" · "+esc(cu):""} · ${new Date().toLocaleDateString()}</div>
+  <table><tr><td>Item</td><td>${esc(desc)}</td></tr><tr><td>Spec</td><td>${esc(spec)}</td></tr>
+  ${L.map(x=>`<tr><td>${x[0]}</td><td>${M(x[1])}</td></tr>`).join("")}
+  <tr><td>Subtotal</td><td>${M(ex)}</td></tr><tr><td>VAT ${V("qvat")}%</td><td>${M(vat)}</td></tr>
+  <tr class="tot"><td>Total</td><td>${M(tot)}</td></tr><tr><td>Per piece</td><td>${M(tot/qty)}</td></tr></table>
+  ${mat?"":'<div class="note">Tip: add a price (stock list or material price) to include material cost.</div>'}`;
+  qtext=`QUOTE — ${job}${cu?" for "+cu:""}\n${desc}\n${spec}\n`+L.map(x=>x[0]+": "+M(x[1])).join("\n")+`\nSubtotal: ${M(ex)}\nVAT ${V("qvat")}%: ${M(vat)}\nTOTAL: ${M(tot)} (${M(tot/qty)} per piece)`;qlast={tot,qty,desc,cu,job,text:qtext,inp:QI.reduce((o,i)=>(o[i]=$(i).value,o),{}),d:Date.now()}}
+
+["dw","dh","gap","mar","bl","need","waste","rot","crop"].forEach(id=>$(id).addEventListener("input",()=>{calc()}));
+["lw","lh","lq","lrw","lsh","lg","lp","cur"].forEach(id=>$(id).addEventListener("input",()=>{lf();calc()}));
+$("lm").addEventListener("change",pickMat);
+$("lp").addEventListener("input",()=>{MP[MA[$("lm").value].n]=V("lp");try{localStorage.setItem("pqc_mp",JSON.stringify(MP))}catch(e){}pushSettings()});
+["qsrc","qc","qj","qpr","qprm","qfin","qfab","qdt","qdp","qdel","qin","qinp","qset","qmk","qvat","qmu"].forEach(id=>$(id).addEventListener("input",quote));
+$("unit").addEventListener("change",()=>{const nu=u(),k=lastUnit/nu;
+  ["dw","dh","gap","mar","bl","lw","lh","lrw","lsh","lg"].forEach(id=>{const v=parseFloat($(id).value);if(!isNaN(v))$(id).value=+(v*k).toFixed(3)});
+  lastUnit=nu;renderStocks();calc();lf()});
+$("stocks").addEventListener("input",e=>{const d=e.target.dataset;if(d.i===undefined)return;
+  stocks[d.i][d.k]=d.k==="n"?e.target.value:d.k==="p"?(parseFloat(e.target.value)||0):t(e.target.value);save();calc()});
+$("stocks").addEventListener("click",e=>{const i=e.target.dataset.del;if(i===undefined)return;stocks.splice(+i,1);save();renderStocks();calc()});
+$("add").addEventListener("click",()=>{stocks.push({n:"New size",w:500,h:700,p:0});save();renderStocks();calc()});
+$("res").addEventListener("click",e=>{const tr=e.target.closest("tr[data-s]");if(tr){sel=+tr.dataset.s;calc()}});
+function go(id){document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x.dataset.t===id));
+  ["t1","t2","t3","t4","t5","t6"].forEach(i=>$(i).classList.toggle("hid",i!==id));
+  if(id==="t3")quote();if(id==="t2")lf();if(id==="t4")rJobs();if(id==="t5")rStock();if(id==="t6")rHist()}
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>go(b.dataset.t)));
+const pr=()=>{try{window.print()}catch(e){}};
+$("prt").addEventListener("click",pr);$("qprt").addEventListener("click",pr);
+$("qcopy").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(qtext);$("qcopy").textContent="Copied"}catch(e){$("qcopy").textContent="Copy blocked"}setTimeout(()=>$("qcopy").textContent="Copy text",1500)});
+
+/* ===== shared data: jobs, stock, quote history ===== */
+const COL={jobs:[],stock:[],quotes:[]};let dbn=null,qlast=null;
+const QI=["qsrc","qc","qj","qpr","qprm","qfin","qfab","qdt","qdp","qdel","qin","qinp","qset","qmk","qvat","qmu"];
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const E=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const lsv=n=>{try{localStorage.setItem("pqc_c_"+n,JSON.stringify(COL[n]))}catch(e){}};
+const rf={jobs:()=>rJobs(),stock:()=>rStock(),quotes:()=>rHist()};
+["jobs","stock","quotes"].forEach(n=>{try{COL[n]=JSON.parse(localStorage.getItem("pqc_c_"+n)||"[]")}catch(e){}});
+async function put(n,o){if(dbn){try{await dbn.collection(n).doc(o.id).set(o)}catch(e){$("dbs").textContent="Save failed"}}
+  else{const i=COL[n].findIndex(x=>x.id===o.id);if(i<0)COL[n].push(o);else COL[n][i]=o;lsv(n);rf[n]()}}
+async function rm(n,id){if(dbn){try{await dbn.collection(n).doc(id).delete()}catch(e){$("dbs").textContent="Delete failed"}}
+  else{COL[n]=COL[n].filter(x=>x.id!==id);lsv(n);rf[n]()}}
+const copy=async(t,btn,l)=>{try{await navigator.clipboard.writeText(t);btn.textContent="Copied"}catch(e){btn.textContent="Copy blocked"}setTimeout(()=>btn.textContent=l,1500)};
+
+/* Jobs */
+const ST=["Design","Approval","Printing","Cutting","Ready","Delivered"];let jeid=null,jarm=null;
+$("js").innerHTML=ST.map((x,i)=>`<option value="${i}">${x}</option>`).join("");
+const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const days=d=>Math.round((new Date(d)-new Date(today()))/864e5);
+const wa=j=>`https://wa.me/${(j.ph||"").replace(/\D/g,"")}?text=${encodeURIComponent(`Hello ${j.c||""}, your order "${j.t}" is now at: ${ST[j.s]}.`+(j.s===4?" It is ready for pickup or delivery.":""))}`;
+function rJobs(){const q=$("jq2").value.toLowerCase(),J=COL.jobs,act=J.filter(j=>j.s<5);
+  $("jstat").innerHTML=`<div><b>${act.length}</b><span>Active</span></div><div><b>${act.filter(j=>j.d&&days(j.d)<0).length}</b><span>Overdue</span></div><div><b>${act.filter(j=>j.d&&days(j.d)===0).length}</b><span>Due today</span></div><div><b>${M(act.reduce((a,j)=>a+(+j.v||0),0))}</b><span>Active value</span></div>`;
+  $("board").innerHTML=ST.map((n,si)=>{const L=J.filter(j=>j.s===si&&((j.c||"")+j.t+(j.n||"")).toLowerCase().includes(q)).sort((a,b)=>(a.d||"9")>(b.d||"9")?1:-1);
+    return`<div class="col"><h2>${n} · ${L.length}</h2>${L.map(j=>{const dd=j.d?days(j.d):null,c=si<5&&j.d?(dd<0?"bad":dd<=2?"warn":""):"";
+      return`<div class="job"><b>${E(j.t)}</b><div class="mute">${E(j.c)}${j.qty?" · "+j.qty+" pcs":""}${j.v?" · "+M(+j.v):""}</div>${j.d?`<div><span class="b ${c}">${si<5&&dd<0?-dd+"d overdue":j.d}</span></div>`:""}${j.n?`<div class="mute">${E(j.n)}</div>`:""}
+      <div class="acts"><span><button class="x" data-m="${j.id}:-1">◀</button><button class="x" data-m="${j.id}:1">▶</button></span><span><a class="x" href="${wa(j)}" target="_blank" rel="noopener" title="WhatsApp update">💬</a><button class="x" data-e="${j.id}">✎</button><button class="x" data-x="${j.id}">${jarm===j.id?"delete?":"✕"}</button></span></div></div>`}).join("")}</div>`}).join("")}
+function jreset(){jeid=null;["jc","jph","jt","jq","jd","jn","jv"].forEach(i=>$(i).value="");$("js").value=0;$("jsv").textContent="Add job";$("jft").textContent="Add job";$("jcn").style.display="none"}
+$("jsv").onclick=()=>{const t=$("jt").value.trim();if(!t){$("jt").focus();return}
+  put("jobs",{id:jeid||uid(),t,c:$("jc").value.trim(),ph:$("jph").value.trim(),qty:+$("jq").value||0,d:$("jd").value,s:+$("js").value,n:$("jn").value.trim(),v:+$("jv").value||0});jreset()};
+$("jcn").onclick=jreset;$("jq2").oninput=rJobs;
+$("board").onclick=e=>{const d=e.target.dataset,J=COL.jobs;
+  if(d.m){const[id,k]=d.m.split(":"),j={...J.find(x=>x.id===id)};j.s=Math.min(5,Math.max(0,j.s+ +k));jarm=null;put("jobs",j)}
+  else if(d.e){const j=J.find(x=>x.id===d.e);jeid=j.id;$("jc").value=j.c||"";$("jph").value=j.ph||"";$("jt").value=j.t;$("jq").value=j.qty||"";$("jd").value=j.d||"";$("js").value=j.s;$("jn").value=j.n||"";$("jv").value=j.v||"";
+    $("jsv").textContent="Update job";$("jft").textContent="Edit job";$("jcn").style.display="";scrollTo({top:0,behavior:"smooth"});jarm=null}
+  else if(d.x){if(jarm===d.x){jarm=null;rm("jobs",d.x)}else{jarm=d.x;rJobs()}}};
+
+/* Stock */
+const sstt=i=>i.m>0&&i.q===0?2:i.m>0&&i.q<=i.m?1:0;let sarm=null;
+function rStock(){const q=$("sq2").value.toLowerCase(),S=COL.stock;let tot=0,lo=0,out=0;S.forEach(i=>{tot+=i.q;if(sstt(i)===1)lo++;if(sstt(i)===2)out++});
+  $("sstat").innerHTML=`<div><b>${S.length}</b><span>Items</span></div><div><b>${tot.toLocaleString()}</b><span>Total sheets</span></div><div><b>${lo}</b><span>Low</span></div><div><b>${out}</b><span>Out</span></div>`;
+  $("srows").innerHTML=S.filter(i=>i.n.toLowerCase().includes(q)).sort((a,b)=>a.n>b.n?1:-1).map(i=>`<tr><td>${E(i.n)}</td><td><div class="qc"><button class="btn" data-a="${i.id}:-1">−</button><input type="number" min="0" data-q="${i.id}" value="${i.q}"><button class="btn" data-a="${i.id}:1">+</button></div></td><td><input type="number" min="0" data-m="${i.id}" value="${i.m}" style="width:84px"></td><td><span class="b ${["","warn","bad"][sstt(i)]}">${["OK","LOW","OUT"][sstt(i)]}</span></td><td><button class="x" data-x="${i.id}">${sarm===i.id?"delete?":"✕"}</button></td></tr>`).join("")||'<tr><td colspan="5">No items yet. Add one or import your stock sizes.</td></tr>'}
+$("srows").onclick=e=>{const d=e.target.dataset;
+  if(d.a){const[id,k]=d.a.split(":"),i={...COL.stock.find(x=>x.id===id)};i.q=Math.max(0,i.q+ +k*+$("sst").value);sarm=null;put("stock",i)}
+  else if(d.x){if(sarm===d.x){sarm=null;rm("stock",d.x)}else{sarm=d.x;rStock()}}};
+$("srows").onchange=e=>{const d=e.target.dataset,k=d.q||d.m;if(!k)return;const i={...COL.stock.find(x=>x.id===k)},v=Math.max(0,parseInt(e.target.value)||0);if(d.q)i.q=v;else i.m=v;put("stock",i)};
+$("sadd").onclick=()=>{const n=$("sn").value.trim();if(!n){$("sn").focus();return}put("stock",{id:uid(),n,q:parseInt($("sq").value)||0,m:parseInt($("sm").value)||0});$("sn").value=""};
+$("simp").onclick=async()=>{for(const x of stocks)if(!COL.stock.some(i=>i.n===x.n))await put("stock",{id:uid(),n:x.n,q:0,m:0})};
+$("scp").onclick=()=>{const L=COL.stock.filter(i=>sstt(i)>0).map(i=>`${i.n}: ${i.q} left (reorder at ${i.m})`);copy(L.length?"Reorder list:\n"+L.join("\n"):"Nothing to reorder.",$("scp"),"Copy reorder list")};
+$("sq2").oninput=rStock;
+
+/* Quote history */
+let harm=null;
+function rHist(){const q=$("hq").value.toLowerCase(),Q=COL.quotes.slice().sort((a,b)=>b.d-a.d).filter(x=>((x.cu||"")+(x.job||"")+(x.desc||"")).toLowerCase().includes(q));
+  $("hsum").textContent=`${Q.length} quote${Q.length===1?"":"s"} · ${M(Q.reduce((a,x)=>a+x.tot,0))} quoted`;
+  $("hrows").innerHTML=Q.map(x=>`<tr><td>${new Date(x.d).toLocaleDateString()}</td><td>${E(x.cu)}</td><td>${E(x.job||x.desc)}</td><td>${x.qty}</td><td class="big">${M(x.tot)}</td><td><button class="x" data-c="${x.id}" title="Copy text">⧉</button><button class="x" data-j="${x.id}" title="Create job">➜ Job</button><button class="x" data-r="${x.id}" title="Reuse rates">↻</button><button class="x" data-x="${x.id}">${harm===x.id?"delete?":"✕"}</button></td></tr>`).join("")||'<tr><td colspan="6">No saved quotes yet. Build one on the Quote tab and press Save quote.</td></tr>'}
+$("hrows").onclick=e=>{const d=e.target.dataset,Q=COL.quotes;
+  if(d.c)copy(Q.find(x=>x.id===d.c).text,e.target,"⧉");
+  else if(d.j){const x=Q.find(y=>y.id===d.j);put("jobs",{id:uid(),t:x.job||x.desc,c:x.cu||"",ph:"",qty:x.qty,d:"",s:0,n:"From quote",v:x.tot});go("t4")}
+  else if(d.r){const x=Q.find(y=>y.id===d.r);QI.forEach(i=>{if(x.inp[i]!==undefined)$(i).value=x.inp[i]});go("t3")}
+  else if(d.x){if(harm===d.x){harm=null;rm("quotes",d.x)}else{harm=d.x;rHist()}}};
+$("hq").oninput=rHist;
+$("qsave").onclick=()=>{if(!qlast||!qtext)return;put("quotes",{id:uid(),...qlast});$("qsave").textContent="Saved ✓";setTimeout(()=>$("qsave").textContent="Save quote",1500)};
+
+/* ===== Firebase: Auth + Firestore (same collection API as before) ===== */
+const FC={apiKey:"AIzaSyCtaYVd788Mr9-hY22U4ngEFmp_ZMkkn0E",authDomain:"print-shop-toolkit.firebaseapp.com",projectId:"print-shop-toolkit",storageBucket:"print-shop-toolkit.firebasestorage.app",messagingSenderId:"867324703318",appId:"1:867324703318:web:2921d491de72a43e1041f7"};
+let unsubs=[],pt=null;
+function pushSettings(){clearTimeout(pt);pt=setTimeout(()=>{if(dbn)dbn.collection("settings").doc("main").set({stocks,mp:MP}).catch(()=>{})},800)}
+function startSync(email){dbn=firebase.firestore();
+  ["jobs","stock","quotes"].forEach(n=>unsubs.push(dbn.collection(n).onSnapshot(sn=>{COL[n]=sn.docs.map(d=>({...d.data(),id:d.id}));rf[n]()},()=>{$("dbs").textContent="Sync error"})));
+  unsubs.push(dbn.collection("settings").doc("main").onSnapshot(sn=>{
+    if(sn.metadata.hasPendingWrites)return;
+    if(!sn.exists){if(!sn.metadata.fromCache)pushSettings();return}
+    const d=sn.data();
+    if(d.stocks&&JSON.stringify(d.stocks)!==JSON.stringify(stocks)){stocks=d.stocks;stocks.forEach(x=>x.p=+x.p||0);try{localStorage.setItem("pqc_v3",JSON.stringify(stocks))}catch(e){}renderStocks();calc()}
+    if(d.mp&&JSON.stringify(d.mp)!==JSON.stringify(MP)){MP=d.mp;if(document.activeElement!==$("lp"))$("lp").value=MP[MA[$("lm").value].n]||"";lf()}},()=>{}));
+  $("dbs").textContent="Shared · "+email;$("sgo").style.display=""}
+function stopSync(){unsubs.forEach(f=>f());unsubs=[];dbn=null;COL.jobs=[];COL.stock=[];COL.quotes=[];Object.values(rf).forEach(f=>f());$("sgo").style.display="none"}
+try{firebase.initializeApp(FC);const au=firebase.auth();
+  au.onAuthStateChanged(u=>{if(u){$("lov").style.display="none";startSync(u.email)}else{stopSync();$("lov").style.display="flex";$("dbs").textContent="Signed out"}});
+  $("lbtn").onclick=async()=>{$("lerr").textContent="";try{await au.signInWithEmailAndPassword($("le").value.trim(),$("lpw").value)}catch(e){$("lerr").textContent=/credential|password|user-not-found/.test(e.code)?"Wrong email or password.":e.message}};
+  $("lpw").onkeydown=e=>{if(e.key==="Enter")$("lbtn").click()};
+  $("sgo").onclick=()=>au.signOut();
+}catch(e){$("dbs").textContent="This device only (Firebase not loaded)"}
+renderStocks();calc();pickMat();
+</script>
+</body>
+</html>
