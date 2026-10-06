@@ -120,6 +120,7 @@ a.x{text-decoration:none}
     <div class="card noprint">
       <h2>Quote builder</h2>
       <div class="row"><div><label>Quote for</label><select id="qsrc"><option value="s">Qty &amp; Cost job</option><option value="l">Large format job</option></select></div><div><label>Customer</label><input id="qc"></div></div>
+      <div class="row r3" id="qsrow"><div><label>Qty</label><input id="qq" type="number" min="0" placeholder="e.g. 1000"></div><div><label>Stock size</label><select id="qst"></select></div><div><label>Design (set on Qty &amp; Cost tab)</label><div id="qdz" style="padding:9px 0;font-size:14px"></div></div></div>
       <div class="row"><div><label>Job</label><input id="qj"></div><div><label>Setup / design fee</label><input id="qset" type="number" step="any" min="0" value="0"></div></div>
       <h2 style="margin-top:6px">Production</h2>
       <div class="row r3"><div><label>Printing / sheet</label><input id="qpr" type="number" step="any" min="0" value="0"></div><div><label>Printing / m²</label><input id="qprm" type="number" step="any" min="0" value="0"></div><div><label>Finishing / piece</label><input id="qfin" type="number" step="any" min="0" value="0"></div></div>
@@ -268,9 +269,23 @@ function lf(){
 let qtext="";
 function quote(){
   const src=$("qsrc").value,un=$("unit").selectedOptions[0].text;let qty,mat,pr,desc,spec;
-  if(src==="s"){const r=R[sel],need=parseInt($("need").value)||0;
-    if(!r||!need||!r.n){$("qout").innerHTML='<div class="note">Enter a design size and Qty needed on the Qty &amp; Cost tab first, and select a stock row.</div>';qtext="";return}
-    qty=need;mat=r.cost||0;pr=r.sheets*V("qpr");desc=`${$("dw").value} × ${$("dh").value} ${un} × ${need} pcs`;spec=`${r.s.n} · ${r.n}/sheet · ${r.sheets} sheets`}
+  $("qsrow").style.display=src==="s"?"":"none";
+  const sig=stocks.map(x=>x.n).join("|");
+  if($("qst").dataset.sig!==sig){const cv=$("qst").value||"a";
+    $("qst").innerHTML='<option value="a">Auto (best)</option>'+stocks.map((x,i)=>`<option value="${i}">${E(x.n)}</option>`).join("");
+    $("qst").dataset.sig=sig;$("qst").value=[...$("qst").options].some(o=>o.value===cv)?cv:"a"}
+  $("qdz").innerHTML=`${E($("dw").value)} × ${E($("dh").value)} ${un} <button class="x" data-go="t1">edit</button>`;
+  if(document.activeElement!==$("qq"))$("qq").value=$("need").value;
+  if(src==="s"){calc();const need=parseInt($("need").value)||0,msg=m=>{$("qout").innerHTML='<div class="note">'+m+'</div>';qtext="";qlast=null};
+    if(!(t($("dw").value)>0&&t($("dh").value)>0))return msg("Enter a design width and height on the Qty &amp; Cost tab.");
+    if(!need)return msg("Enter the Qty above to build the quote.");
+    const auto=$("qst").value==="a";
+    if(auto){const ok=R.filter(x=>x.n>0);
+      if(ok.length){const pc=ok.filter(x=>x.cost);sel=(pc.length?pc.reduce((p,c)=>c.cost<p.cost?c:p):ok.reduce((p,c)=>c.used>p.used?c:p)).i}}
+    else sel=+$("qst").value;
+    const r=R[sel];
+    if(!r||!r.n)return msg("The design does not fit on "+(r?E(r.s.n):"this stock size")+". Pick another stock size or choose Auto.");
+    qty=need;mat=r.cost||0;pr=r.sheets*V("qpr");desc=`${$("dw").value} × ${$("dh").value} ${un} × ${need} pcs`;spec=`${r.s.n}${auto?" (auto)":""} · ${r.n}/sheet · ${r.sheets} sheets`}
   else{if(!lfR){$("qout").innerHTML='<div class="note">Fill in a material job on the Large format tab first.</div>';qtext="";return}
     qty=lfR.q;mat=lfR.cost||0;pr=lfR.A*V("qprm");desc=lfR.d;spec=lfR.lay}
   const fin=qty*V("qfin"),fab=qty*V("qfab"),die=V("qdt")+qty*V("qdp"),set=V("qset"),del=V("qdel"),ins=V("qin")+qty*V("qinp");
@@ -370,6 +385,10 @@ $("hrows").onclick=e=>{const d=e.target.dataset,Q=COL.quotes;
 $("hq").oninput=rHist;
 $("qsave").onclick=()=>{if(!qlast||!qtext)return;put("quotes",{id:uid(),...qlast});$("qsave").textContent="Saved ✓";setTimeout(()=>$("qsave").textContent="Save quote",1500)};
 
+$("qq").addEventListener("input",()=>{$("need").value=$("qq").value;quote()});
+$("qst").addEventListener("input",quote);
+$("qdz").onclick=e=>{if(e.target.dataset.go)go(e.target.dataset.go)};
+document.addEventListener("focusin",e=>{if(e.target.type==="number"&&e.target.value==="0")e.target.select()});
 /* ===== Quotation + LPO tabs (embedded apps) ===== */
 const fit=()=>["f7","f8"].forEach(i=>{const f=$(i);if(f.offsetParent)f.style.height=Math.max(520,innerHeight-f.getBoundingClientRect().top-12)+"px"});addEventListener("resize",fit);
 const mount=(id,k)=>{const f=$(id);if(!f.dataset.m){f.dataset.m=1;f.srcdoc=APPDOCS[k]}};
