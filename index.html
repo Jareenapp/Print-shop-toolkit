@@ -40,6 +40,13 @@ th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute
 #res tr.sel{background:var(--accbg)}
 .big{font-weight:700;font-size:17px}
 .best{display:inline-block;background:var(--acc);color:var(--bg);font-size:10px;padding:1px 6px;border-radius:99px;margin-left:6px;vertical-align:middle}
+.lcv{display:flex;gap:10px;align-items:flex-start;overflow-x:auto;padding-bottom:4px}
+.lcv-c{border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--card);cursor:pointer;min-width:150px;box-sizing:border-box}
+.lcv-c.sel{border-color:var(--acc);background:var(--accbg)}
+.lcv-c svg{display:block;height:auto}
+.lcv-h{display:flex;justify-content:space-between;align-items:center;gap:6px;font-weight:600;margin-bottom:4px}
+.lcv-big{font-size:26px;font-weight:700;line-height:1.1}
+.lcv-s{font-size:12px;color:var(--mute);margin-top:4px;line-height:1.5}
 .leg{display:flex;gap:14px;font-size:12px;color:var(--mute);margin:8px 0 0;flex-wrap:wrap}
 .leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 svg{width:100%;height:auto;max-height:420px;display:block}
@@ -121,6 +128,14 @@ a.x{text-decoration:none}
       <div class="note">Default roll and sheet sizes are typical market sizes. Change them if your stock is different. Prices are remembered per material on this device.</div>
     </div>
     <div class="card"><h2>Result</h2><div id="lout"></div></div>
+    <div class="card wide" id="lprevc"><h2 id="lprevt">Layout preview</h2><div id="lprev" style="text-align:center"></div><div class="note" id="lprevn"></div></div>
+    <div class="card wide" id="lcmpc"><h2>Compare media widths</h2>
+      <div class="row" style="margin-bottom:8px"><div><label>Roll widths to compare (same unit as above, comma separated)</label><input id="lcw" value="100, 120, 137"></div></div>
+      <div class="tw"><table><thead id="lch"></thead><tbody id="lcb"></tbody></table></div>
+      <h2 style="margin:16px 0 8px">Artwork on each media width</h2>
+      <div id="lcv" class="lcv"></div>
+      <div class="note" id="lcvn"></div>
+      <div class="note">Tap a row or a picture to use that roll width in the job above. The best row uses the least roll area. All pictures use the same scale, so a wider media looks wider.</div></div>
   </div>
 
   <div id="t3" class="grid hid">
@@ -254,26 +269,75 @@ function pickMat(){const a=MA[$("lm").value];
   $("lpl").textContent=a.m==="u"?"Price per unit":"Price per m²";
   if(a.m!=="u")$("lrw").value=f(a.w);if(a.m==="s")$("lsh").value=f(a.h);
   $("lp").value=MP[a.n]||"";lf()}
+const PAL=["#d2d955","#6ea4c8","#c4563a","#7e5a9b","#8db75a"];
+function rollFit(W,H,RW,g,q){let b=null;
+  for(const [w,h,rot] of [[W,H,false],[H,W,true]]){if(w>RW||w<=0||h<=0)continue;const per=Math.floor((RW+g)/(w+g)),rw=Math.ceil(q/per),len=rw*(h+g)-g;if(!b||len<b.len)b={per,rw,len,rot,w,h}}
+  return b}
+function drawLay(Wd,Ht,rects,lw,lh){
+  const fs=Math.min(Wd,Ht)/14,n=rects.length;
+  const body=rects.map((r,i)=>`<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${PAL[i%5]}" stroke="var(--card)" stroke-width="${fs/20}"/>`+(n<=150?`<text x="${r.x+r.w/2}" y="${r.y+r.h/2}" font-size="${Math.min(r.w,r.h)*.38}" text-anchor="middle" dominant-baseline="central" fill="#000">${i+1}</text>`:"")).join("");
+  return `<svg viewBox="${-fs*2.4} ${-fs*2.4} ${Wd+fs*4.8} ${Ht+fs*4.8}" role="img" aria-label="Layout preview" style="max-height:580px"><rect width="${Wd}" height="${Ht}" fill="var(--bg)" stroke="var(--mute)" stroke-width="${fs/16}"/>${body}<text x="${Wd/2}" y="${-fs*.8}" font-size="${fs}" text-anchor="middle" fill="var(--mute)">${lw}</text><text transform="translate(${-fs*.8} ${Ht/2}) rotate(-90)" font-size="${fs}" text-anchor="middle" fill="var(--mute)">${lh}</text></svg>`}
+function cmpW(W,H,g,q,p,cur){
+  const ws=$("lcw").value.split(/[,\s]+/).map(parseFloat).filter(x=>x>0);
+  const R2=ws.map(x=>{const RW=x*u(),b=rollFit(W,H,RW,g,q);if(!b)return{x};const ru=b.len*RW/1e6;return{x,b,ru,waste:(1-W*H*q/1e6/ru)*100,cost:p?ru*p:null}});
+  const ok=R2.filter(r=>r.b),mn=ok.length?Math.min(...ok.map(r=>r.ru)):0;
+  $("lch").innerHTML=`<tr><th>Roll width</th><th>Per row</th><th>Rows</th><th>Roll length</th><th>Roll area</th><th>Waste</th>${p?"<th>Cost</th>":""}</tr>`;
+  $("lcb").innerHTML=R2.map(r=>r.b?`<tr data-w="${r.x}" style="cursor:pointer" class="${Math.abs(r.x*u()-cur)<.01?"sel":""}" ${Math.abs(r.x*u()-cur)<.01?'style="background:var(--accbg)"':""}><td>${r.x}${r.ru===mn?'<span class="best">BEST</span>':""}</td><td class="big">${r.b.per}</td><td>${r.b.rw}</td><td>${(r.b.len/1000).toFixed(2)} m</td><td>${r.ru.toFixed(2)} m²</td><td>${r.waste.toFixed(1)}%</td>${p?`<td>${M(r.cost)}</td>`:""}</tr>`:`<tr><td>${r.x}</td><td colspan="${p?6:5}">Artwork does not fit this width</td></tr>`).join("");cmpV(R2,g,q,cur)}
+function cmpV(R2,g,q,cur){
+  const el=$("lcv"),ok=R2.filter(r=>r.b);
+  if(!ok.length){el.innerHTML="";$("lcvn").textContent="";return}
+  const mxW=Math.max(...R2.map(r=>r.x*u())),mn=Math.min(...ok.map(r=>r.ru)),un=$("unit").selectedOptions[0].text,MAXR=6;let cut=false;
+  el.innerHTML=R2.map(r=>{
+    const RW=r.x*u();
+    if(!r.b)return`<div class="lcv-c" style="flex:1 1 150px;cursor:default"><div class="lcv-h">${r.x} ${un}</div><div class="note">Artwork does not fit this width.</div></div>`;
+    const b=r.b,sr=Math.min(b.rw,MAXR),n=Math.min(q,sr*b.per),Ht=sr*(b.h+g)-g,fs=mxW/16,used=b.per*(b.w+g)-g,left=RW-used;
+    if(sr<b.rw)cut=true;
+    let o="";
+    if(left>.5)o+=`<rect x="${used}" y="0" width="${left}" height="${Ht}" fill="none" stroke="var(--mute)" stroke-width="${fs/16}" stroke-dasharray="${fs/3} ${fs/3}"/>`;
+    for(let i=0;i<n;i++){const x=(i%b.per)*(b.w+g),y=Math.floor(i/b.per)*(b.h+g);
+      o+=`<rect x="${x}" y="${y}" width="${b.w}" height="${b.h}" fill="${PAL[i%5]}" stroke="var(--card)" stroke-width="${fs/18}"/>`;
+      if(n<=60)o+=`<text x="${x+b.w/2}" y="${y+b.h/2}" font-size="${Math.min(b.w,b.h)*.38}" text-anchor="middle" dominant-baseline="central" fill="#000">${i+1}</text>`}
+    const svg=`<svg style="width:${((RW+fs)/(mxW+fs)*100).toFixed(3)}%" viewBox="${-fs*.5} ${-fs*1.9} ${RW+fs} ${Ht+fs*3.2}" role="img" aria-label="${r.x} ${un} media layout"><rect x="0" y="0" width="${RW}" height="${Ht}" fill="var(--bg)" stroke="var(--mute)" stroke-width="${fs/14}"/>${o}<text x="${RW/2}" y="${-fs*.6}" font-size="${fs*.9}" text-anchor="middle" fill="var(--mute)">${r.x} ${un}</text></svg>`;
+    const isSel=Math.abs(RW-cur)<.01,perM=b.per*1000/(b.h+g);
+    return`<div class="lcv-c${isSel?" sel":""}" data-w="${r.x}" style="flex:1 1 150px"><div class="lcv-h"><span>${r.x} ${un}</span>${r.ru===mn?'<span class="best">BEST</span>':""}</div>
+      <div class="lcv-big">${b.per} <span style="font-size:13px;font-weight:400;color:var(--mute)">pcs across</span></div>${svg}
+      <div class="lcv-s">${b.rw} row${b.rw>1?"s":""} × ${b.per} = <b>${q}</b> pcs${b.per*b.rw>q?` (${b.per*b.rw-q} spare slot${b.per*b.rw-q>1?"s":""})`:""}<br>Roll length: <b>${(b.len/1000).toFixed(2)} m</b><br>Total: <b>${r.ru.toFixed(2)} m²</b> · waste ${r.waste.toFixed(1)}%<br>Unused width: ${f(Math.max(left,0))} ${un}${b.rot?" · artwork rotated":""}<br>≈ ${perM.toFixed(1)} pcs per metre of roll</div></div>`}).join("");
+  $("lcvn").textContent=cut?`Pictures show the first ${MAXR} rows only (to keep them readable). Numbers in the table cover the full quantity.`:"";
+}
+$("lcv").onclick=e=>{const c=e.target.closest(".lcv-c[data-w]");if(c){$("lrw").value=c.dataset.w;lf()}};
+
+$("lcb").onclick=e=>{const tr=e.target.closest("tr[data-w]");if(tr){$("lrw").value=tr.dataset.w;lf()}};
 function lf(){
-  const a=MA[$("lm").value]||MA[0],q=parseInt($("lq").value)||0,p=V("lp"),un=$("unit").selectedOptions[0].text;lfR=null;
+  const a=MA[$("lm").value]||MA[0],q=parseInt($("lq").value)||0,p=V("lp"),un=$("unit").selectedOptions[0].text,isR=a.m==="r";lfR=null;
+  $("lprevc").style.display=a.m==="u"?"none":"";$("lcmpc").style.display=isR?"":"none";$("lprev").innerHTML="";$("lprevn").textContent="";
   if(!q){$("lout").innerHTML='<div class="note">Enter a quantity.</div>';return}
   if(a.m==="u"){lfR={q,A:0,cost:p?p*q:null,d:`${a.n}, ${q} unit${q>1?"s":""}`,lay:"Ready-made display product"};
     $("lout").innerHTML=tb([["Product",a.n],["Quantity",q],...(p?[["Cost",M(p*q),1],["Per unit",M(p)]]:[])]);return}
   const W=t($("lw").value),H=t($("lh").value),RW=t($("lrw").value),g=t($("lg").value);
   if(W<=0||H<=0||RW<=0){$("lout").innerHTML='<div class="note">Enter item and stock sizes.</div>';return}
-  let ru,lay,rows;const A=W*H*q/1e6;
-  if(a.m==="r"){let b=null;
-    for(const [w,h,rot] of [[W,H,false],[H,W,true]]){if(w>RW)continue;const per=Math.floor((RW+g)/(w+g)),rw=Math.ceil(q/per),len=rw*(h+g)-g;if(!b||len<b.len)b={per,rw,len,rot}}
-    if(!b){$("lout").innerHTML='<div class="note">Item is wider than the roll in both directions.</div>';return}
+  const A=W*H*q/1e6;let ru,lay,rows,rects,Ht,lw,lh,note;
+  if(isR){const b=rollFit(W,H,RW,g,q);cmpW(W,H,g,q,p,RW);
+    if(!b){$("lout").innerHTML='<div class="note">Item is wider than the roll in both directions.</div>';$("lprev").innerHTML='<div class="note">The artwork is wider than this media in both directions.</div>';return}
     ru=b.len*RW/1e6;lay=`${b.per} across × ${b.rw} row${b.rw>1?"s":""}${b.rot?" (rotated)":""}`;
-    rows=[["Layout",lay],["Roll length used",(b.len/1000).toFixed(2)+" m"]]}
-  else{const SH=t($("lsh").value),n=best(RW,SH,W,H,g,true).length;
-    if(!n){$("lout").innerHTML='<div class="note">Item does not fit on the sheet.</div>';return}
-    const sh=Math.ceil(q/n);ru=sh*RW*SH/1e6;lay=`${n} per sheet × ${sh} sheet${sh>1?"s":""}`;rows=[["Layout",lay],["Sheets needed",sh]]}
-  rows.push(["Print area",A.toFixed(2)+" m²"],["Material used",ru.toFixed(2)+" m² ("+((1-A/ru)*100).toFixed(1)+"% waste)"]);
+    rows=[["Layout",lay],["Pieces per row",b.per],["Rows",b.rw],["Total media length needed",(b.len/1000).toFixed(2)+" m"+(un!=="mm"?` (${f(b.len)} ${un})`:""),1],["Media size used",`${f(RW)} ${un} × ${(b.len/1000).toFixed(2)} m`]];
+    const ws=$("lcw").value.split(/[,\s]+/).map(parseFloat).filter(x=>x>0);
+    for(const x of ws){if(Math.abs(x*u()-RW)<.01)continue;const o=rollFit(W,H,x*u(),g,q);rows.push([`Length on ${x} ${un} media`,o?`${(o.len/1000).toFixed(2)} m · ${(o.len*x*u()/1e6).toFixed(2)} m²`:"does not fit"])}
+    const maxL=Math.max(8*RW,3000);rects=[];
+    for(let i=0;i<Math.min(q,600);i++){const r=Math.floor(i/b.per),y=r*(b.h+g);if(y+b.h>maxL&&i>0)break;rects.push({x:(i%b.per)*(b.w+g),y,w:b.w,h:b.h})}
+    const full=rects.length===q;Ht=full?b.len:Math.max(...rects.map(r=>r.y+r.h));
+    lw=`Media width ${f(RW)} ${un}`;lh=full?`Roll length ${(b.len/1000).toFixed(2)} m`:`first ${rects.length} pieces`;
+    note=`Each piece ${f(b.w)} × ${f(b.h)} ${un}${b.rot?" (rotated to fit best)":""}.`+(full?"":` Showing the first ${rects.length} of ${q} pieces.`)}
+  else{const SH=t($("lsh").value),Lr=best(RW,SH,W,H,g,true),n=Lr.length;
+    if(!n){$("lout").innerHTML='<div class="note">Item does not fit on the sheet.</div>';$("lprev").innerHTML='<div class="note">The artwork does not fit on this sheet.</div>';return}
+    const sh=Math.ceil(q/n);ru=sh*RW*SH/1e6;lay=`${n} per sheet × ${sh} sheet${sh>1?"s":""}`;
+    rows=[["Layout",lay],["Pieces per sheet",n],["Sheets needed",sh]];
+    rects=Lr;Ht=SH;lw=`Sheet width ${f(RW)} ${un}`;lh=`Sheet height ${f(SH)} ${un}`;note=`One sheet shown. Every sheet is cut the same way. Each piece ${f(W)} × ${f(H)} ${un}.`}
+  rows.push(["Area per piece",(W*H/1e6).toFixed(4)+" m²"],["Print area",A.toFixed(2)+" m²"],["Material used",ru.toFixed(2)+" m² ("+((1-A/ru)*100).toFixed(1)+"% waste)"]);
   if(p)rows.push(["Material cost",M(ru*p),1],["Per item",M(ru*p/q)]);
   lfR={q,A,cost:p?ru*p:null,d:`${a.n}, ${$("lw").value} × ${$("lh").value} ${un} × ${q} pcs`,lay};
-  $("lout").innerHTML=tb(rows)+'<div class="note">Material is charged on the area used, including waste.</div>'}
+  $("lout").innerHTML=tb(rows)+'<div class="note">Material is charged on the area used, including waste.</div>';
+  $("lprevt").textContent="Layout preview — "+lay;$("lprevn").textContent=note;
+  $("lprev").innerHTML=drawLay(RW,Ht,rects,lw,lh)}
 
 let qtext="";
 function quote(){
@@ -310,13 +374,13 @@ function quote(){
   qtext=`QUOTE — ${job}${cu?" for "+cu:""}\n${desc}\n${spec}\n`+L.map(x=>x[0]+": "+M(x[1])).join("\n")+`\nSubtotal: ${M(ex)}\nVAT ${V("qvat")}%: ${M(vat)}\nTOTAL: ${M(tot)} (${M(tot/qty)} per piece)`;qlast={tot,qty,desc,cu,job,text:qtext,inp:QI.reduce((o,i)=>(o[i]=$(i).value,o),{}),d:Date.now()}}
 
 ["dw","dh","gap","mar","bl","need","waste","rot","crop"].forEach(id=>$(id).addEventListener("input",()=>{calc()}));
-["lw","lh","lq","lrw","lsh","lg","lp","cur"].forEach(id=>$(id).addEventListener("input",()=>{lf();calc()}));
+["lw","lh","lq","lrw","lsh","lg","lp","cur","lcw"].forEach(id=>$(id).addEventListener("input",()=>{lf();calc()}));
 $("lm").addEventListener("change",pickMat);
 $("lp").addEventListener("input",()=>{MP[MA[$("lm").value].n]=V("lp");try{localStorage.setItem("pqc_mp",JSON.stringify(MP))}catch(e){}pushSettings()});
 ["qsrc","qc","qj","qpr","qprm","qfin","qfab","qdt","qdp","qdel","qin","qinp","qset","qmk","qvat","qmu"].forEach(id=>$(id).addEventListener("input",quote));
 $("unit").addEventListener("change",()=>{const nu=u(),k=lastUnit/nu;
   ["dw","dh","gap","mar","bl","lw","lh","lrw","lsh","lg"].forEach(id=>{const v=parseFloat($(id).value);if(!isNaN(v))$(id).value=+(v*k).toFixed(3)});
-  lastUnit=nu;renderStocks();calc();lf()});
+  $("lcw").value=$("lcw").value.split(/[,\s]+/).filter(Boolean).map(v=>+(parseFloat(v)*k).toFixed(2)).join(", ");lastUnit=nu;renderStocks();calc();lf()});
 $("stocks").addEventListener("input",e=>{const d=e.target.dataset;if(d.i===undefined)return;
   stocks[d.i][d.k]=d.k==="n"?e.target.value:d.k==="p"?(parseFloat(e.target.value)||0):t(e.target.value);save();calc()});
 $("stocks").addEventListener("click",e=>{const i=e.target.dataset.del;if(i===undefined)return;stocks.splice(+i,1);save();renderStocks();calc()});
